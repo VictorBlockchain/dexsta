@@ -1,0 +1,358 @@
+{
+  "address": "6k8vntYQMbU9AUtnMcypeoS8bf1Ncqv5ZQPqrU3DoH5X",
+  "metadata": {
+    "name": "xft_vault",
+    "version": "0.1.0",
+    "spec": "0.1.0"
+  },
+  "instructions": [
+    {
+      "name": "create_vault",
+      "discriminator": [
+        29,
+        237,
+        247,
+        208,
+        193,
+        82,
+        54,
+        135
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "xft_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "minter_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "xft_id",
+          "type": "u64"
+        },
+        {
+          "name": "xft_type",
+          "type": "u64"
+        }
+      ],
+      "returns": "pubkey"
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [],
+      "args": []
+    },
+    {
+      "name": "lock_vault",
+      "discriminator": [
+        88,
+        219,
+        122,
+        115,
+        28,
+        236,
+        222,
+        117
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "xft_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "minter_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "xft_id",
+          "type": "u64"
+        },
+        {
+          "name": "unlock_date",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "withdraw_sol",
+      "discriminator": [
+        145,
+        131,
+        74,
+        136,
+        65,
+        137,
+        42,
+        38
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "xft_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "minter_program"
+        },
+        {
+          "name": "operator_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "xft_id",
+          "type": "u64"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdraw_spl",
+      "discriminator": [
+        181,
+        154,
+        94,
+        86,
+        62,
+        115,
+        6,
+        186
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "xft_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "minter_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "xft_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdraw_xft",
+      "discriminator": [
+        11,
+        201,
+        127,
+        213,
+        140,
+        84,
+        6,
+        226
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "xft_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "minter_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "xft_id",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Vault",
+      "discriminator": [
+        211,
+        8,
+        232,
+        43,
+        2,
+        152,
+        117,
+        119
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Only the xft-minter program can call this instruction"
+    },
+    {
+      "code": 6001,
+      "name": "WithdrawTooSoon",
+      "msg": "Withdraw too soon"
+    },
+    {
+      "code": 6002,
+      "name": "WithdrawTooMuch",
+      "msg": "Withdraw amount too high"
+    }
+  ],
+  "types": [
+    {
+      "name": "Vault",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "xft_id",
+            "type": "u64"
+          },
+          {
+            "name": "xft_type",
+            "type": "u64"
+          },
+          {
+            "name": "unlock_date",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}

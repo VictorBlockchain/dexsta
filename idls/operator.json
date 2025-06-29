@@ -1,0 +1,296 @@
+{
+  "address": "CvEyB4XdT5nBiGfCK1vW8eSuuAW7o9EZ8v7dFwafZ6P3",
+  "metadata": {
+    "name": "operator",
+    "version": "0.1.0",
+    "spec": "0.1.0"
+  },
+  "instructions": [
+    {
+      "name": "add_operator",
+      "docs": [
+        "settings[0] = license",
+        "settings[1] = access expire",
+        "settings[2] = role (1 = super operator, can add other operators)",
+        "setings[3] = next withdraw date (time stamp)",
+        "settings[4] = max solana withdraw amount"
+      ],
+      "discriminator": [
+        149,
+        142,
+        187,
+        68,
+        33,
+        250,
+        87,
+        105
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "The user attempting to add an operator (must be label owner or operator)"
+          ],
+          "signer": true
+        },
+        {
+          "name": "label_account"
+        },
+        {
+          "name": "xft_minter_program",
+          "docs": [
+            "The xft-minter program for CPI"
+          ],
+          "address": "BPFLoaderUpgradeab1e11111111111111111111111"
+        },
+        {
+          "name": "operator_account",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "operator",
+          "type": "pubkey"
+        },
+        {
+          "name": "xft_id",
+          "type": "u64"
+        },
+        {
+          "name": "settings",
+          "type": {
+            "vec": "u64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edit_withdraw_settings",
+      "discriminator": [
+        190,
+        72,
+        49,
+        115,
+        75,
+        2,
+        231,
+        192
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "label_account"
+        },
+        {
+          "name": "xft_minter_program",
+          "address": "BPFLoaderUpgradeab1e11111111111111111111111"
+        },
+        {
+          "name": "operator_account",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "operator",
+          "type": "pubkey"
+        },
+        {
+          "name": "xft_id",
+          "type": "u64"
+        },
+        {
+          "name": "withdraw_frequency",
+          "type": "u64"
+        },
+        {
+          "name": "max_sol_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "is_operator",
+      "discriminator": [
+        221,
+        227,
+        5,
+        233,
+        182,
+        150,
+        14,
+        178
+      ],
+      "accounts": [
+        {
+          "name": "operator_account"
+        }
+      ],
+      "args": [
+        {
+          "name": "address",
+          "type": "pubkey"
+        },
+        {
+          "name": "xft_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "remove_operator",
+      "discriminator": [
+        84,
+        183,
+        126,
+        251,
+        137,
+        150,
+        214,
+        134
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "label_account"
+        },
+        {
+          "name": "xft_minter_program",
+          "address": "BPFLoaderUpgradeab1e11111111111111111111111"
+        },
+        {
+          "name": "operator_account",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "operator",
+          "type": "pubkey"
+        },
+        {
+          "name": "xft_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "update_next_withdraw",
+      "discriminator": [
+        83,
+        145,
+        107,
+        145,
+        12,
+        110,
+        180,
+        49
+      ],
+      "accounts": [
+        {
+          "name": "operator_account",
+          "writable": true
+        },
+        {
+          "name": "vault_signer",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  115,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "operator"
+              },
+              {
+                "kind": "arg",
+                "path": "xft_id"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "operator",
+          "type": "pubkey"
+        },
+        {
+          "name": "xft_id",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "OperatorAdded",
+      "discriminator": [
+        216,
+        247,
+        101,
+        54,
+        51,
+        70,
+        215,
+        192
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "NotAuthorized",
+      "msg": "Not authorized to add operator for this xft_id"
+    }
+  ],
+  "types": [
+    {
+      "name": "OperatorAdded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "operator",
+            "type": "pubkey"
+          },
+          {
+            "name": "xft_id",
+            "type": "u64"
+          },
+          {
+            "name": "settings",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    }
+  ]
+}

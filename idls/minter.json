@@ -1,0 +1,249 @@
+{
+  "address": "BPFLoaderUpgradeab1e11111111111111111111111",
+  "metadata": {
+    "name": "minter",
+    "version": "0.1.0",
+    "spec": "0.1.0"
+  },
+  "instructions": [
+    {
+      "name": "check_operator",
+      "discriminator": [
+        46,
+        112,
+        50,
+        196,
+        25,
+        195,
+        79,
+        244
+      ],
+      "accounts": [
+        {
+          "name": "operator_account"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "get_label_owner",
+      "discriminator": [
+        189,
+        209,
+        62,
+        23,
+        106,
+        66,
+        249,
+        95
+      ],
+      "accounts": [
+        {
+          "name": "label_account"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "get_xft",
+      "discriminator": [
+        71,
+        101,
+        87,
+        76,
+        2,
+        182,
+        163,
+        125
+      ],
+      "accounts": [
+        {
+          "name": "xft_account"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "is_label_owner",
+      "discriminator": [
+        161,
+        118,
+        144,
+        47,
+        122,
+        213,
+        40,
+        88
+      ],
+      "accounts": [
+        {
+          "name": "label_account"
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "The authority to check"
+          ],
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "address",
+          "type": "pubkey"
+        },
+        {
+          "name": "xft_id",
+          "type": "u64"
+        }
+      ],
+      "returns": "bool"
+    },
+    {
+      "name": "mint_xft",
+      "docs": [
+        "The settings vector configures labels:",
+        "* 0: link to label",
+        "* 1: registration in years",
+        "* 2: operator license",
+        "* 3: xft type",
+        "* 4: if type is license, license term",
+        "* 5: 0 false, 1 true (formerly mint pass)",
+        "* 6: quantity",
+        "* 7: label registration expire",
+        "* 8: unused (formerly redeem days)",
+        "* 9: transferable",
+        "* 10: wrapto",
+        "* 11: label split for marketplace license",
+        "* 12: label vault locked",
+        "* 13: label vault unlock date",
+        "Label Types (settings[3]):",
+        "* 1: Lead Label (1 of 1)",
+        "* 2: Profile Label (1 of 1)",
+        "* 3: Tag Label (must be limited edidtion)",
+        "* 4: Chapter Label (must be limited edidtion)",
+        "* 5: Operator License (must be limited edidtion)",
+        "* 6: Marketplace License (must be limited edidtion)",
+        "* 7: Art/tickets/gaming (can be 1 of 1 or limited edition)",
+        "* 8: wrappedTo (1 of 1)",
+        "* 9: open",
+        "Addresses",
+        "address[0] create",
+        "address[1] label owner",
+        "address[2] vault address"
+      ],
+      "discriminator": [
+        237,
+        95,
+        229,
+        60,
+        170,
+        152,
+        80,
+        189
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "The authority who is minting the XFT"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "xft_mint",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "The payer for rent/fees"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System program"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "ipfs",
+          "type": "string"
+        },
+        {
+          "name": "settings",
+          "type": {
+            "vec": "u64"
+          }
+        },
+        {
+          "name": "address",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "transfer_xft",
+      "discriminator": [
+        185,
+        47,
+        26,
+        169,
+        145,
+        166,
+        49,
+        71
+      ],
+      "accounts": [
+        {
+          "name": "from",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "to"
+        },
+        {
+          "name": "xft_account",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "wrap_xft",
+      "discriminator": [
+        45,
+        240,
+        69,
+        24,
+        171,
+        12,
+        190,
+        136
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "xft_account",
+          "writable": true
+        }
+      ],
+      "args": []
+    }
+  ]
+}

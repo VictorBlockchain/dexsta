@@ -928,7 +928,6 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
- "solana-program",
 ]
 
 [[package]]
@@ -1010,7 +1009,6 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
- "minter",
 ]
 
 [[package]]
@@ -2793,8 +2791,6 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
- "minter",
- "operator",
 ]
 
 [[package]]

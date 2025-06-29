@@ -1,10 +1,14 @@
 #![cfg(not(target_arch = "bpf"))]
 
 use anchor_lang::prelude::*;
-use minter::cpi::accounts::IsLabelOwner;
-use minter::program::Minter;
+use anchor_lang::{AccountSerialize, AccountDeserialize};
+use std::str::FromStr;
 
 declare_id!("CvEyB4XdT5nBiGfCK1vW8eSuuAW7o9EZ8v7dFwafZ6P3");
+declare_program!(minter);
+use minter::program::Minter;
+
+// Now you can use minter::cpi and minter::program::Minter for CPI interfaces
 
 // Fallback operator check logic (outside #[program] mod)
 pub fn is_operator_fallback(_address: Pubkey, _xft_id: u64) -> Result<bool> {
@@ -17,25 +21,7 @@ pub mod operator {
     use super::*;
     use minter::cpi::accounts::IsLabelOwner;
 
-    pub fn receive_cpi_from_vault(_ctx: Context<ReceiveCpiFromVault>) -> Result<()> {
-        // This will be called by the vault program via CPI
-        Ok(())
-    }
-
-    pub fn receive_cpi_from_admin_xft(_ctx: Context<ReceiveCpiFromAdminXft>) -> Result<()> {
-        // This will be called by the admin_xft program via CPI
-        Ok(())
-    }
-
-    pub fn receive_cpi_from_minter(_ctx: Context<ReceiveCpiFromMinter>) -> Result<()> {
-        // This will be called by the minter program via CPI
-        Ok(())
-    }
-
-    pub fn cpi_to_minter(_ctx: Context<CpiToMinter>) -> Result<()> {
-        // This will make a CPI call to the minter program (to be implemented)
-        Ok(())
-    }
+    // No additional functions needed here; is_operator is the main function for external calls.
     ///settings[0] = license
     ///settings[1] = access expire
     ///settings[2] = role (1 = super operator, can add other operators)
@@ -90,9 +76,9 @@ pub mod operator {
         });
         Ok(())
     }
-
+    
     pub fn is_operator(ctx: Context<IsOperator>, address: Pubkey, xft_id: u64) -> Result<(bool, u64, u64, u64, u64)> {
-
+        
         // Fetch the operator account for (address, xft_id)
         let operator_account = OperatorAccount::fetch(&ctx.accounts.operator_account, &address, xft_id)?;
         let settings = operator_account.settings;
@@ -228,6 +214,36 @@ pub mod operator {
         )?;
         Ok(())
     }
+    
+    pub fn update_next_withdraw(ctx: Context<UpdateNextWithdraw>, operator: Pubkey, xft_id: u64) -> Result<()> {
+        // Only allow CPI from xft-vault program
+        let vault_program_id = Pubkey::from_str("6k8vntYQMbU9AUtnMcypeoS8bf1Ncqv5ZQPqrU3DoH5X").unwrap();
+        require!(*ctx.program_id == vault_program_id, OperatorError::NotAuthorized);
+
+        // Fetch the operator account for (operator, xft_id)
+        let mut operator_account = OperatorAccount::fetch(&ctx.accounts.operator_account, &operator, xft_id)?;
+        let now = Clock::get()?.unix_timestamp as u64;
+        // settings[5] = withdraw frequency (in days)
+        let withdraw_frequency_days = operator_account.settings.get(5).copied().unwrap_or(0);
+        let next_withdraw = now + withdraw_frequency_days * 86400;
+        // Update settings[3] = next withdraw date
+        if operator_account.settings.len() > 3 {
+            operator_account.settings[3] = next_withdraw;
+        } else {
+            while operator_account.settings.len() <= 3 {
+                operator_account.settings.push(0);
+            }
+            operator_account.settings[3] = next_withdraw;
+        }
+        // Save the updated settings
+        OperatorAccount::try_from_init(
+            &mut ctx.accounts.operator_account,
+            &operator,
+            xft_id,
+            operator_account.settings.clone(),
+        )?;
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -260,6 +276,17 @@ pub struct AddOperator<'info> {
 pub struct IsOperator<'info> {
     /// CHECK: This is safe for prototyping; actual checks should be implemented in production
     pub operator_account: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+#[instruction(operator: Pubkey, xft_id: u64)]
+pub struct UpdateNextWithdraw<'info> {
+    /// CHECK: This is safe for prototyping; actual checks should be implemented in production
+    #[account(mut)]
+    pub operator_account: AccountInfo<'info>,
+    /// CHECK: Vault signer PDA, must be a signer and derived from vault program
+    #[account(seeds = [b"vault_signer", operator.as_ref(), &xft_id.to_le_bytes()], bump)]
+    pub vault_signer: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]
@@ -301,19 +328,21 @@ pub struct OperatorAdded {
 }
 
 // Helper for fetching operator account (mock/prototype)
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, Default)]
 pub struct OperatorAccount {
     pub settings: Vec<u64>,
 }
 impl OperatorAccount {
-    pub fn fetch(_account: &AccountInfo, _address: &Pubkey, _xft_id: u64) -> Result<Self> {
-        // TODO: Replace with actual deserialization logic
-        // For now, return a dummy account with example settings
-        Ok(OperatorAccount {
-            settings: vec![0, u64::MAX, 1, 1234567890, 1000], // [license, access_expire, role, next_withdraw, max_withdraw]
-        })
+    pub fn fetch(account: &AccountInfo, _address: &Pubkey, _xft_id: u64) -> Result<Self> {
+        let data = account.try_borrow_data()?;
+        OperatorAccount::deserialize(&mut &data[..])
+            .map_err(|_| error!(OperatorError::NotAuthorized))
     }
-    pub fn try_from_init(_account: &mut AccountInfo, _operator: &Pubkey, _xft_id: u64, settings: Vec<u64>) -> Result<Self> {
-        // TODO: Implement actual account init logic
-        Ok(OperatorAccount { settings })
+
+    pub fn try_from_init(account: &mut AccountInfo, _operator: &Pubkey, _xft_id: u64, settings: Vec<u64>) -> Result<Self> {
+        let mut data = account.try_borrow_mut_data()?;
+        let operator_account = OperatorAccount { settings: settings.clone() };
+        operator_account.serialize(&mut &mut data[..])?;
+        Ok(operator_account)
     }
 }

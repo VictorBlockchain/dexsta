@@ -7,13 +7,10 @@ edition = "2021"
 crate-type = ["cdylib", "lib"]
 
 [features]
-no-entrypoint = []
+default = []
 cpi = []
 idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 
-default = ["no-entrypoint"]
-
 [dependencies]
-anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
-anchor-spl = { version = "0.31.1" }
-minter = { path = "../xft-minter", features = ["cpi"] }
+anchor-lang = "0.31.1"
+anchor-spl = "0.31.1"

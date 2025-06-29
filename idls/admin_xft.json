@@ -1,0 +1,259 @@
+{
+  "address": "Admin111111111111111111111111111111111111111",
+  "metadata": {
+    "name": "admin_xft",
+    "version": "0.1.0",
+    "spec": "0.1.0"
+  },
+  "instructions": [
+    {
+      "name": "get_fees",
+      "discriminator": [
+        231,
+        37,
+        126,
+        85,
+        207,
+        91,
+        63,
+        52
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  120,
+                  102,
+                  116
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  120,
+                  102,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "platform_xft_in",
+          "type": "u64"
+        },
+        {
+          "name": "payout_address",
+          "type": "pubkey"
+        },
+        {
+          "name": "mint_fee_per_year",
+          "type": "u64"
+        },
+        {
+          "name": "marketplace_fee",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_fees",
+      "discriminator": [
+        137,
+        178,
+        49,
+        58,
+        0,
+        245,
+        242,
+        190
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  120,
+                  102,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin_operator"
+        }
+      ],
+      "args": [
+        {
+          "name": "mint_fee_per_year",
+          "type": "u64"
+        },
+        {
+          "name": "marketplace_fee",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_payout_address",
+      "discriminator": [
+        5,
+        158,
+        197,
+        34,
+        137,
+        153,
+        47,
+        86
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  120,
+                  102,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin_operator"
+        }
+      ],
+      "args": [
+        {
+          "name": "payout_address",
+          "type": "pubkey"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AdminXFT",
+      "discriminator": [
+        252,
+        105,
+        182,
+        169,
+        18,
+        122,
+        103,
+        121
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Unauthorized: Only super operators linked to the platform XFT can update fees or payout address"
+    }
+  ],
+  "types": [
+    {
+      "name": "AdminXFT",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "platform_xft_in",
+            "type": "u64"
+          },
+          {
+            "name": "payout_address",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_fee_per_year",
+            "type": "u64"
+          },
+          {
+            "name": "marketplace_fee",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}
