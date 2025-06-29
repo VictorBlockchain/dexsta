@@ -7,20 +7,23 @@ declare_id!("Admin111111111111111111111111111111111111111");
 #[program]
 pub mod admin_xft {
     use super::*;
-    pub fn initialize(ctx: Context<Initialize>, platform_xft_in: u64, payout_address: Pubkey, mint_fee_per_year: u64, marketplace_fee: u64) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>, platform_xft_in: u64, payout_address: Pubkey, mint_fee_per_year: u64, marketplace_fee_sol: u64, marketplace_fee_dexsta: u64, dexsta_address: Pubkey) -> Result<()> {
         let admin = &mut ctx.accounts.admin;
         admin.platform_xft_in = platform_xft_in;
         admin.payout_address = payout_address;
         admin.mint_fee_per_year = mint_fee_per_year;
-        admin.marketplace_fee = marketplace_fee;
+        admin.marketplace_fee_sol = marketplace_fee_sol;
+        admin.marketplace_fee_dexsta = marketplace_fee_dexsta;
+        admin.dexsta_address = dexsta_address;
         admin.bump = ctx.bumps.admin;
         Ok(())
     }
-    pub fn set_fees(ctx: Context<SetFees>, mint_fee_per_year: u64, marketplace_fee: u64) -> Result<()> {
+    pub fn set_fees(ctx: Context<SetFees>, mint_fee_per_year: u64, marketplace_fee_sol: u64, marketplace_fee_dexsta: u64) -> Result<()> {
         let admin = &mut ctx.accounts.admin;
         require!(is_super_operator(ctx.accounts.admin_operator.as_ref(), admin.platform_xft_in), AdminError::Unauthorized);
         admin.mint_fee_per_year = mint_fee_per_year;
-        admin.marketplace_fee = marketplace_fee;
+        admin.marketplace_fee_sol = marketplace_fee_sol;
+        admin.marketplace_fee_dexsta = marketplace_fee_dexsta;
         Ok(())
     }
     pub fn set_payout_address(ctx: Context<SetPayoutAddress>, payout_address: Pubkey) -> Result<()> {
@@ -29,9 +32,9 @@ pub mod admin_xft {
         admin.payout_address = payout_address;
         Ok(())
     }
-    pub fn get_fees(ctx: Context<GetFees>) -> Result<(u64, u64, Pubkey)> {
+    pub fn get_fees(ctx: Context<GetFees>) -> Result<(u64, u64, u64, Pubkey, Pubkey)> {
         let admin = &ctx.accounts.admin;
-        Ok((admin.mint_fee_per_year, admin.marketplace_fee, admin.payout_address))
+        Ok((admin.mint_fee_per_year, admin.marketplace_fee_sol, admin.marketplace_fee_dexsta, admin.dexsta_address, admin.payout_address))
     }
 }
 
@@ -40,7 +43,9 @@ pub struct AdminXFT {
     pub platform_xft_in: u64,
     pub payout_address: Pubkey,
     pub mint_fee_per_year: u64,
-    pub marketplace_fee: u64,
+    pub marketplace_fee_sol: u64,
+    pub marketplace_fee_dexsta: u64,
+    pub dexsta_address: Pubkey,
     pub bump: u8,
 }
 

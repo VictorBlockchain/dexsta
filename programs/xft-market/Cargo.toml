@@ -16,3 +16,4 @@ anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl = { version = "0.31.1" }
 minter = { path = "../xft-minter" }
 operator = { path = "../xft-operator" }
+admin_xft = { path = "../xft-admin", features = ["cpi"] }

@@ -56,7 +56,7 @@ pub mod minter {
     /// * 5: 0 false, 1 true (formerly mint pass)
     /// * 6: quantity
     /// * 7: label registration expire
-    /// * 8: unused (formerly redeem days)
+    /// * 8: if type is market license, marketplace fee percentage
     /// * 9: transferable
     /// * 10: wrapto
     /// * 11: label split for marketplace license
@@ -268,11 +268,94 @@ pub mod minter {
         Ok(())
     }
     
-    pub fn transfer_xft(_ctx: Context<TransferXft>) -> Result<()> {
+    pub fn transfer_xft(ctx: Context<TransferXft>) -> Result<()> {
+        let xft_account = &ctx.accounts.xft_account;
+        let settings = &xft_account.settings;
+        let addresses = &xft_account.addresses;
+        // Get the settings[0] account of the XFT
+        let settings_0_xft_id = settings[0];
+        let parent_xft_account = if settings_0_xft_id > 0 {
+            XftAccount::try_from_slice(&ctx.accounts.parent_xft_account.data.borrow())?
+        } else {
+            return Err(ErrorCode::InvalidSettings.into());
+        };
+        
+        // Check if this is a limited transfer XFT (settings[9] = 0)
+        let mut is_authorized_sender = false;
+        if settings[9] == 0 {
+            // This XFT can only be sent by addresses[0] or addresses[1] of the settings[0] XFT
+            is_authorized_sender = parent_xft_account.addresses[0] == ctx.accounts.caller.key() || 
+                                     parent_xft_account.addresses[1] == ctx.accounts.caller.key();
+            if !is_authorized_sender {
+                // Check if caller is an operator for the parent XFT
+                let cpi_accounts = operator::cpi::accounts::IsOperator {
+                    operator_account: ctx.accounts.parent_xft_account.to_account_info(),
+                };
+                let cpi_ctx = CpiContext::new(ctx.accounts.operator_program.to_account_info(), cpi_accounts);
+                // Anchor CPI does not return values; in real use, check account state or use events
+                operator::cpi::is_operator(
+                    cpi_ctx,
+                    ctx.accounts.caller.key(),
+                    settings_0_xft_id,
+                )?;
+                // If you need to check the result, fetch the account state here
+                // For now, we cannot set is_authorized_sender = true based on CPI return
+            }
+            if !is_authorized_sender {
+                // If caller is not authorized, it can only be sent to the burn address
+                require!(
+                    ctx.accounts.receiver.key() == ctx.accounts.burn_address.key(),
+                    ErrorCode::Unauthorized
+                );
+            }
+        }
+        // If settings[6] of the xft_id == 1 and settings[0] == 0
+        if settings[6] == 1 && settings[0] == 0 {
+            // Update addresses[1] to receiver
+            let mut parent_xft_account = XftAccount::try_from_slice(&ctx.accounts.parent_xft_account.data.borrow())?;
+            parent_xft_account.addresses[1] = ctx.accounts.receiver.key();
+            // Update the parent XFT account data
+            let mut data = ctx.accounts.parent_xft_account.try_borrow_mut_data()?;
+            let mut cursor = std::io::Cursor::new(&mut data[..]);
+            parent_xft_account.serialize(&mut cursor)?;
+        }
+        // Transfer XFT from caller to receiver using anchor-spl
+        let transfer_ctx = CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            token::Transfer {
+                from: ctx.accounts.caller_token_account.to_account_info(),
+                to: ctx.accounts.receiver.to_account_info(),
+                authority: ctx.accounts.caller.to_account_info(),
+            },
+        );
+        token::transfer(transfer_ctx, settings[6])?;
         Ok(())
     }
 
+    pub fn update_vault(ctx: Context<UpdateVault>, xft_id: u64, unlock_date: u64) -> Result<()> {
+        // Verify the caller is the vault program
+        require!(
+            ctx.accounts.vault_program.key() == ctx.accounts.xft_account.key(),
+            ErrorCode::Unauthorized
+        );
 
+        // Update the XFT account settings
+        let xft_account = &mut ctx.accounts.xft_account;
+        let mut settings = xft_account.settings.clone();
+        
+        // Ensure settings vector has enough elements
+        while settings.len() <= 13 {
+            settings.push(0);
+        }
+        
+        // Update settings[12] = 1 and settings[13] = unlock_date
+        settings[12] = 1;
+        settings[13] = unlock_date;
+        
+        xft_account.settings = settings;
+        
+        Ok(())
+    }
     pub fn initialize_counter(ctx: Context<InitializeCounter>) -> Result<()> {
         let counter = &mut ctx.accounts.counter;
         counter.value = 0;
@@ -309,6 +392,42 @@ pub fn is_label_owner(accounts: &MintXft, address: Pubkey, xft_id: u64) -> Resul
     }
     Ok(true)
 }
+
+pub fn is_market_license(xft_account_info: &AccountInfo, parent_xft_account_info: &AccountInfo) -> Result<(bool, u64, Pubkey, u64)> {
+    let xft_account = XftAccount::try_from_slice(&xft_account_info.data.borrow())?;
+    let settings = xft_account.settings;
+    // Check if settings[7] > now (expire check)
+    let expire = settings.get(7).copied().unwrap_or(0);
+    let now = Clock::get()?.unix_timestamp as u64;
+    if expire <= now {
+        return Ok((false, 0, Pubkey::default(), 0));
+    }
+    // Get the parent xft account (settings[0] of xft_id)
+    let parent_xft_id = settings.get(0).copied().unwrap_or(0);
+    if parent_xft_id == 0 {
+        return Ok((false, 0, Pubkey::default(), 0));
+    }
+    let parent_xft_account = XftAccount::try_from_slice(&parent_xft_account_info.data.borrow())?;
+    let parent_settings = parent_xft_account.settings;
+    let parent_addresses = parent_xft_account.addresses;
+    // Check if settings[7] of parent_xft account > now
+    let parent_expire = parent_settings.get(7).copied().unwrap_or(0);
+    if parent_expire <= now {
+        return Ok((false, parent_xft_id, Pubkey::default(), 0));
+    }
+    // Check parent_addresses[2] and parent_settings[8]
+    let parent_vault = parent_addresses.get(2).copied().unwrap_or(Pubkey::default());
+    let parent_setting_8 = parent_settings.get(8).copied().unwrap_or(0);
+    Ok((true, parent_xft_id, parent_vault, parent_setting_8))
+}
+
+pub fn get_vault(xft_account_info: &AccountInfo) -> Result<Pubkey> {
+    let xft_account = XftAccount::try_from_slice(&xft_account_info.data.borrow())?;
+    let addresses = xft_account.addresses;
+    let vault = addresses.get(2).copied().unwrap_or(Pubkey::default());
+    Ok(vault)
+}
+
 
 // Account structs for Anchor instructions
 
@@ -423,12 +542,24 @@ pub struct WrapXft<'info> {
 #[derive(Accounts)]
 pub struct TransferXft<'info> {
     #[account(mut)]
-    pub from: Signer<'info>,
-    /// CHECK: This is safe for prototyping; actual checks should be implemented in production
-    pub to: AccountInfo<'info>,
+    pub caller: Signer<'info>,
     /// CHECK: This is safe for prototyping; actual checks should be implemented in production
     #[account(mut)]
-    pub xft_account: AccountInfo<'info>,
+    pub caller_token_account: AccountInfo<'info>,
+    /// CHECK: This is safe for prototyping; actual checks should be implemented in production
+    #[account(mut)]
+    pub receiver: AccountInfo<'info>,
+    /// CHECK: This is safe for prototyping; actual checks should be implemented in production
+    #[account(mut)]
+    pub xft_account: Account<'info, XftAccount>,
+    /// CHECK: This is safe for prototyping; actual checks should be implemented in production
+    #[account(mut)]
+    pub parent_xft_account: AccountInfo<'info>,
+    /// CHECK: This is safe for prototyping; actual checks should be implemented in production
+    pub operator_program: AccountInfo<'info>,
+    /// CHECK: This is safe for prototyping; actual checks should be implemented in production
+    pub burn_address: AccountInfo<'info>,
+    pub token_program: Program<'info, Token>,
 }
 
 #[derive(Accounts)]
@@ -464,6 +595,14 @@ pub struct InitializeCounter<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct UpdateVault<'info> {
+    /// CHECK: This is safe for prototyping; actual checks should be implemented in production
+    pub vault_program: AccountInfo<'info>,
+    #[account(mut)]
+    pub xft_account: Account<'info, XftAccount>,
 }
 
 // CPI context for xft-admin get_fees

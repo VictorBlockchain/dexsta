@@ -2965,6 +2965,7 @@ dependencies = [
 name = "xft_market"
 version = "0.1.0"
 dependencies = [
+ "admin_xft",
  "anchor-lang",
  "anchor-spl",
  "minter",
