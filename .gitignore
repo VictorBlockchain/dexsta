@@ -1,0 +1,50 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Next.js
+.next/
+out/
+
+# Environment files
+.env
+.env.*
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# Misc
+*.local
+*.cache
+
+# Build output
+dist/
+build/
+
+# Test coverage
+coverage/
+
+# Others
+.idea/
+*.swp
+
+# Ignore anchor build artifacts
+**/target/
+
+# Existing project ignores
+.anchor
+target
+**/*.rs.bk
+test-ledger
+.yarn
